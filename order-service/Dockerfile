@@ -1,0 +1,23 @@
+# 1️⃣ Image de base JDK 21
+FROM eclipse-temurin:21-jdk
+
+# 2️⃣ Répertoire de travail
+WORKDIR /app
+
+# 3️⃣ Téléchargez et ajoutez l'agent OpenTelemetry (avec cache optimisé)
+RUN mkdir -p /app/otel && \
+    curl -sL -o /app/otel/opentelemetry-javaagent.jar \
+    https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v1.28.0/opentelemetry-javaagent.jar
+
+# 4️⃣ Copier le JAR pré-construit (vérifiez le chemin)
+COPY target/order-service-1.0.0-SNAPSHOT.jar /app/order-service.jar
+
+# 5️⃣ Assurez-vous que le fichier JAR et l'agent ont les bonnes permissions
+RUN chmod +x /app/order-service.jar && \
+    chmod +x /app/otel/opentelemetry-javaagent.jar
+
+# 6️⃣ Exposez le port 8081
+EXPOSE 8081
+
+# 7️⃣ Commande de démarrage
+ENTRYPOINT ["java", "-javaagent:/app/otel/opentelemetry-javaagent.jar", "-jar", "/app/order-service.jar"]

@@ -1,0 +1,22 @@
+### Create order
+POST http://localhost:8081/orders/create
+Content-Type: application/json
+
+{
+  "productId": "125",
+  "quantity": 2
+}
+
+
+###  actuator
+GET http://localhost:8081/actuator/loggers
+
+
+### check invotory
+POST http://localhost:8082/inventory/check
+Content-Type: application/json
+
+{
+  "productId": "123",
+  "quantity": 2
+}

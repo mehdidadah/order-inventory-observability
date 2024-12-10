@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  order-service:
+    container_name: order-service
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    networks:
+      - observability-net
+    depends_on:
+      - jaeger
+      - loki
+    environment:
+      - OTEL_SERVICE_NAME=order-service
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_EXPORTER_OTLP_INSECURE=true
+
+  inventory-service:
+    container_name: inventory-service
+    build:
+      context: ./inventory-service
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    networks:
+      - observability-net
+    depends_on:
+      - jaeger
+      - loki
+    environment:
+      - OTEL_SERVICE_NAME=inventory-service
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_EXPORTER_OTLP_INSECURE=true
+
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "http://localhost:3100/ready" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    depends_on:
+      - jaeger
+    networks:
+      - observability-net
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    networks:
+      - observability-net
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+    networks:
+      - observability-net
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    networks:
+      - observability-net
+
+
+networks:
+  observability-net:
